@@ -15,16 +15,33 @@ interface AuthState {
   error: string | null;
 }
 
+const getUserFromStorage = (): User | null => {
+  try {
+    const storedUser = localStorage.getItem('user');
+
+    if (!storedUser || storedUser === 'undefined') return null;
+
+    return JSON.parse(storedUser);
+  } catch {
+    return null;
+  }
+};
+
+const getTokenFromStorage = (): string | null => {
+  const token = localStorage.getItem('token');
+  if (!token || token === 'undefined') return null;
+  return token;
+};
+
+
 const initialState: AuthState = {
-  user: localStorage.getItem('user')
-    ? JSON.parse(localStorage.getItem('user') as string)
-    : null,
-  token: localStorage.getItem('token'),
+  user: getUserFromStorage(),
+  token: getTokenFromStorage(),
   loading: false,
   error: null,
 };
 
-// Register thunk
+
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (
@@ -32,15 +49,21 @@ export const registerUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axiosInstance.post('/auth/register', { name, email, password });
+      const response = await axiosInstance.post('/auth/register', {
+        name,
+        email,
+        password,
+      });
+
       return response.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || 'Failed to register');
+      return rejectWithValue(
+        err.response?.data?.message || 'Failed to register'
+      );
     }
   }
 );
 
-// Login thunk
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (
@@ -48,13 +71,18 @@ export const loginUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axiosInstance.post('/auth/login', { email, password });
+      const response = await axiosInstance.post('/auth/login', {
+        email,
+        password,
+      });
+
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to login');
     }
   }
 );
+
 
 const authSlice = createSlice({
   name: 'auth',
@@ -63,15 +91,26 @@ const authSlice = createSlice({
     logout(state) {
       state.user = null;
       state.token = null;
+
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
-    setCredentials(state, action: PayloadAction<{ user: User; token: string }>) {
+
+    setCredentials(
+      state,
+      action: PayloadAction<{ user: User; token: string }>
+    ) {
       state.user = action.payload.user;
       state.token = action.payload.token;
+
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.setItem('token', action.payload.token);
     },
   },
+
   extraReducers: (builder) => {
     builder
+      /* REGISTER */
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -80,11 +119,16 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
+        localStorage.setItem('token', action.payload.token);
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = (action.payload as string) || 'Something went wrong';
       })
+
+      /* LOGIN */
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -93,18 +137,16 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        localStorage.setItem('token', action.payload.token);
+
         localStorage.setItem('user', JSON.stringify(action.payload.user));
+        localStorage.setItem('token', action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = (action.payload as string) || 'Something went wrong';
       });
   },
 });
 
 export const { logout, setCredentials } = authSlice.actions;
 export default authSlice.reducer;
-
-
-
