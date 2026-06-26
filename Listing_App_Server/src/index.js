@@ -26,7 +26,10 @@ const initDB = async () => {
 // Create Express app
 const app = express();
 
-const allowedOrigins = ['http://localhost:5173'];
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://your-render-frontend.onrender.com'
+];
 
 app.use(
   cors({
