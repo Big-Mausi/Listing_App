@@ -14,8 +14,6 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getAllListings); 
-router.get('/:id', getListingById);
-
 // Protected routes
 
 router.get('/user/:userId', authMiddleware, getListingsByUser); 
@@ -23,5 +21,8 @@ router.get('/user/:userId/:listingId', authMiddleware, getUserListingById);
 router.post('/create', authMiddleware, createListing); 
 router.put('/:id', authMiddleware, updateListing); 
 router.delete('/:id', authMiddleware, deleteListing); 
+
+router.get('/:id', getListingById);
+
 
 export default router;

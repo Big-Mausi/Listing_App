@@ -238,8 +238,9 @@ const getAllListings = async (req, res, next) => {
       .setOptions({ maxTimeMS: 10000 }); // Fail after 5s if slow
     res.status(200).json(listings);
   } catch (error) {
-    next(error);
-  }
+  console.error('Error in getAllListings:', error);
+  next(error);
+}
 };
 
 // Get Listings by User
