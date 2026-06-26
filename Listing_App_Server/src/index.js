@@ -28,6 +28,7 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:5173',
+  'https://listing-app-client.onrender.com',
   'https://listing-app-1fp9.onrender.com'
 ];
 
